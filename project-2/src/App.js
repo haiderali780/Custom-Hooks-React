@@ -2,58 +2,42 @@ import React, { useEffect, useState } from 'react';
 
 import Tasks from './components/Tasks/Tasks';
 import NewTask from './components/NewTask/NewTask';
+import useHttp from './hooks/use-http';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+
   const [tasks, setTasks] = useState([]);
+  const transformTask = objTask => {
+    const loadedTasks = [];
 
-  const fetchTasks = async (taskText) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        'https://react-http-53317-default-rtdb.firebaseio.com/tasks.json'
-      );
+    for (const taskKey in objTask) {
+      loadedTasks.push({ id: taskKey, text: objTask[taskKey].text });
+    }}
+    const { isLoading,error,  sendReq:fetchTasks } = useHttp({
+        url: 'https://react-http-53317-default-rtdb.firebaseio.com/tasks.json'
+      }, transformTask);
 
-      if (!response.ok) {
-        throw new Error('Request failed!');
-      }
+    
 
-      const data = await response.json();
+    useEffect(() => {
+      fetchTasks();
+    }, []);
 
-      const loadedTasks = [];
+    const taskAddHandler = (task) => {
+      setTasks((prevTasks) => prevTasks.concat(task));
+    };
 
-      for (const taskKey in data) {
-        loadedTasks.push({ id: taskKey, text: data[taskKey].text });
-      }
+    return (
+      <React.Fragment>
+        <NewTask onAddTask={taskAddHandler} />
+        <Tasks
+          items={tasks}
+          loading={isLoading}
+          error={error}
+          onFetch={fetchTasks}
+        />
+      </React.Fragment>
+    );
+  }
 
-      setTasks(loadedTasks);
-    } catch (err) {
-      setError(err.message || 'Something went wrong!');
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const taskAddHandler = (task) => {
-    setTasks((prevTasks) => prevTasks.concat(task));
-  };
-
-  return (
-    <React.Fragment>
-      <NewTask onAddTask={taskAddHandler} />
-      <Tasks
-        items={tasks}
-        loading={isLoading}
-        error={error}
-        onFetch={fetchTasks}
-      />
-    </React.Fragment>
-  );
-}
-
-export default App;
+  export default App;

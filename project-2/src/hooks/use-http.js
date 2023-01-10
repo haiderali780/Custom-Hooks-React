@@ -10,9 +10,9 @@ const useHttp = (reqConfig, applyData) => {
         try {
             const response = await fetch(
                 reqConfig.url, {
-                method: reqConfig.method,
-                headers: reqConfig.headers,
-                body: JSON.stringify(reqConfig.body)
+                method: reqConfig.method ? reqConfig.method : 'GET',
+                headers: reqConfig.header ? reqConfig.headers : {},
+                body: reqConfig.body ? JSON.stringify(reqConfig.body) : null
             }
             );
 
